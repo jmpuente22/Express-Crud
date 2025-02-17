@@ -12,14 +12,15 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 
 const port = process.env.PORT;
-app.use(cors({origin: 'http:localhost:5173'}));
+app.use(cors({ origin: 'http://localhost:5173' }));
 
 const db = mysql.createConnection({
     host: 'thresholds-test.mysql.database.azure.com',
-    user: 'test',
-    port: 3306,
-    passowrd: 'test',
-    database: 'task',
+    user: 'process.env.USERNAME',
+    port: 33220,
+    password: 'process.env.PASSWORD',
+    database: 'jpuente_tasks',
+    connectTimeout: 10000, 
 });
 
 db.connect((err) =>{
@@ -67,5 +68,5 @@ app.post('/tasks', (req, res) => {
 })
 
 app.listen(port, () => {
-    console.log("Express server runing on port 3000");
+    console.log(`Example app listening on port ${port}`)
 })
