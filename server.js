@@ -11,7 +11,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 
 
-const port = 3000;
+const port = 3001;
 app.use(cors({ origin: 'http://localhost:5173' }));
 
 const db = mysql.createConnection({
@@ -67,54 +67,6 @@ app.post('/tasks', (req, res) => {
     })
 })
 
-// PUT: Update an entire task
-app.put('/tasks/:id', (req, res) => {
-    const { id } = req.params;
-    const { title, description, is_completed } = req.body;
-    const query = "UPDATE tasks SET title = ?, description = ?, is_completed = ? WHERE id = ?;";
-    const params = [title, description, is_completed, id];
-
-    db.query(query, params, (err, result) => {
-        if (err) {
-            console.log("Error updating task:", err);
-            return res.status(500).json({ error: 'Error updating task.' });
-        }
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'Task not found' });
-        }
-        res.json({ message: 'Task updated successfully' });
-    });
-});
-
-// PATCH: Partially update a task
-app.patch('/tasks/:id', (req, res) => {
-    const { id } = req.params;
-    const updates = req.body;
-
-    let query = 'UPDATE tasks SET ';
-    const values = [];
-
-    Object.keys(updates).forEach((key, index) => {
-        query += `${key} = ?`;
-        if (index < Object.keys(updates).length - 1) query += ', ';
-        values.push(updates[key]);
-    });
-
-    query += ' WHERE id = ?';
-    values.push(id);
-
-    db.query(query, values, (err, result) => {
-        if (err) {
-            console.log("Error partially updating task:", err);
-            return res.status(500).json({ error: 'Error updating task.' });
-        }
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'Task not found' });
-        }
-        res.json({ message: 'Task updated successfully' });
-    });
-});
-
 // DELETE: Remove a task
 app.delete('/tasks/:id', (req, res) => {
     const { id } = req.params;
@@ -129,6 +81,49 @@ app.delete('/tasks/:id', (req, res) => {
             return res.status(404).json({ message: 'Task not found' });
         }
         res.json({ message: 'Task deleted successfully' });
+    });
+});
+// Update an existing task (PUT replaces all fields)
+app.put('/tasks/:id', (req, res) => {
+    const { id } = req.params;
+    const { title, description, is_completed } = req.body;
+    const query = "UPDATE tasks SET title = ?, description = ?, is_completed = ? WHERE id = ?;";
+
+    db.query(query, [title, description, is_completed, id], (err, results) => {
+        if (err) {
+            console.log("Error updating task", err);
+            res.status(500).json({ error: 'Error updating task' });
+        } else if (results.affectedRows === 0) {
+            res.status(404).json({ error: 'Task not found' });
+        } else {
+            res.json({ message: 'Task updated successfully' });
+        }
+    });
+});
+
+// Partially update a task (PATCH updates only specified fields)
+app.patch('/tasks/:id', (req, res) => {
+    const { id } = req.params;
+    const updates = req.body;
+    const fields = Object.keys(updates).map(field => `${field} = ?`).join(', ');
+    const values = Object.values(updates);
+
+    if (!fields.length) {
+        return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    const query = `UPDATE tasks SET ${fields} WHERE id = ?;`;
+    values.push(id);
+
+    db.query(query, values, (err, results) => {
+        if (err) {
+            console.log("Error patching task", err);
+            res.status(500).json({ error: 'Error patching task' });
+        } else if (results.affectedRows === 0) {
+            res.status(404).json({ error: 'Task not found' });
+        } else {
+            res.json({ message: 'Task patched successfully' });
+        }
     });
 });
 
