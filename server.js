@@ -1,8 +1,8 @@
-import express from "express";
-import cors from "cors";
-import mysql from "mysql2";
-import bodyParser from "body-parser";
-import "dotenv/config";
+import express from 'express';
+import cors from 'cors';
+import mysql from 'mysql2';
+import bodyParser from 'body-parser';
+import 'dotenv/config';
 
 const app = express();
 
@@ -16,11 +16,10 @@ app.use(cors({ origin: 'http://localhost:5173' }));
 
 const db = mysql.createConnection({
     host: 'thresholds-test.mysql.database.azure.com',
-    user: 'process.env.USERNAME',
-    port: 33220,
+    user: 'process.env.jpuente',
+    port: 33222,
     password: 'process.env.PASSWORD',
-    database: 'jpuente_tasks',
-    connectTimeout: 10000, 
+    database: 'jpuente_tasks', 
 });
 
 db.connect((err) =>{
